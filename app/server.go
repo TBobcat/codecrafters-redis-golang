@@ -18,7 +18,7 @@ func main() {
 
 	}
 
-	// this loops keeps the server up and listening
+	// this loops keeps the server up and listening to handle requests concurrently
 	for {
 		connection, err := l.Accept()
 		if err != nil {

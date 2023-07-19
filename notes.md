@@ -49,3 +49,7 @@ ref:
 Methods and interfaces: https://go.dev/tour/methods/4
 
 https://www.golinuxcloud.com/golang-tcp-server-client/#Building_a_Simple_Golang_TCP_Server
+
+
+debugging Go:
+https://github.com/golang/vscode-go/wiki/debugging
