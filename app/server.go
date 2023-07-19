@@ -17,17 +17,27 @@ func main() {
 		os.Exit(1)
 
 	}
-	conn, err := l.Accept()
-	if err != nil {
-		fmt.Println("Error accepting connection: ", err.Error())
-		os.Exit(1)
+
+	// this loops keeps the server up and listening
+	for {
+		connection, err := l.Accept()
+		if err != nil {
+			fmt.Println("Error accepting connection: ", err.Error())
+			os.Exit(1)
+		}
+
+		go handler(connection)
 	}
+
+}
+
+func handler(conn net.Conn) {
 
 	buffer := make([]byte, 1024)
 	// the loop handles data sent through the same connection opened above
 	for {
 		// sends response so long as data is sent to socket, buffer contains data
-		_, err = conn.Read(buffer)
+		_, err := conn.Read(buffer)
 		if err != nil {
 			// had to put this within outter err checking block
 			// to handle EOF(no more data sent) for some reason
