@@ -3,6 +3,7 @@ Every Golang program has 1 main package, and 1 main function
 
 - socket stage:
     - open a socket on a port and write response to it
+	- install gore, a go console https://github.com/x-motemen/gore
 
 ```go
 /*
@@ -51,5 +52,13 @@ Methods and interfaces: https://go.dev/tour/methods/4
 https://www.golinuxcloud.com/golang-tcp-server-client/#Building_a_Simple_Golang_TCP_Server
 
 
+## July 19th
+
+when there's no for loop to keep server listening, go routine code didn't work ? 
 debugging Go:
 https://github.com/golang/vscode-go/wiki/debugging
+
+## July 26th
+echo stage used this guy's idea
+https://app.codecrafters.io/users/sarp
+
