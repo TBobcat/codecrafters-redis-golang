@@ -62,3 +62,5 @@ https://github.com/golang/vscode-go/wiki/debugging
 echo stage used this guy's idea
 https://app.codecrafters.io/users/sarp
 
+## July 28th
+in golang `make` allocates memory space to variables
