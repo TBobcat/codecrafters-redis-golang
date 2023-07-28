@@ -6,8 +6,7 @@ import (
 	"net"
 	"os"
 	"strings"
-
-	"k8s.io/utils/strings/slices"
+	//"k8s.io/utils/strings/slices" non standard modules not supported for codecrafters' testing
 )
 
 func main() {
@@ -64,18 +63,18 @@ func handler(conn net.Conn, m map[string]string) {
 		fmt.Println("Received request:", request)
 		fmt.Println("Number of parts:", len(split))
 
-		if slices.Contains(split, "ping") {
+		if strings.Contains(request, "ping") {
 			resp = []byte("+PONG\r\n")
 
-		} else if slices.Contains(split, "echo") {
+		} else if strings.Contains(request, "echo") {
 
 			resp = []byte(fmt.Sprintf("+%s\r\n", split[4]))
 
-		} else if slices.Contains(split, "set") {
+		} else if strings.Contains(request, "set") {
 			m[split[4]] = split[6]
 			resp = []byte("+OK\r\n")
 
-		} else if slices.Contains(split, "get") {
+		} else if strings.Contains(request, "get") {
 			value := m[split[4]]
 			if value != "" {
 				resp = []byte(fmt.Sprintf("+%s\r\n", value))
