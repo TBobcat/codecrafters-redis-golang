@@ -6,11 +6,15 @@ import (
 	"net"
 	"os"
 	"strings"
+
+	"k8s.io/utils/strings/slices"
 )
 
 func main() {
 	// You can use print statements as follows for debugging, they'll be visible when running tests.
 	fmt.Println("Logs from your program will appear here!")
+
+	mem := make(map[string]string)
 
 	l, err := net.Listen("tcp", "127.0.0.1:6379")
 	if err != nil {
@@ -27,11 +31,11 @@ func main() {
 			os.Exit(1)
 		}
 
-		go handler(connection)
+		go handler(connection, mem)
 	}
 }
 
-func handler(conn net.Conn) {
+func handler(conn net.Conn, m map[string]string) {
 
 	// buffer is an array of bytes
 	buffer := make([]byte, 1024)
@@ -50,34 +54,43 @@ func handler(conn net.Conn) {
 			}
 		}
 
-		// this convers byte slice to string, use condition on this to make response
-		req_cmd := string(buffer)
-		//resp := make([]byte, 1024)
+		// buffer is 1024 size, only take up to n as it's the size buffer is used
+		// rest is not filled
+		request := string(buffer[:n])
+		split := strings.Split(request, "\r\n")
+		var resp []byte
 
-		if strings.Contains(req_cmd, "ping") {
-			resp := []byte("+PONG\r\n")
-			_, err = conn.Write(resp)
-			if err != nil {
-				fmt.Println("Error sending response", err.Error())
-				os.Exit(1)
+		// for debugging
+		fmt.Println("Received request:", request)
+		fmt.Println("Number of parts:", len(split))
+
+		if slices.Contains(split, "ping") {
+			resp = []byte("+PONG\r\n")
+
+		} else if slices.Contains(split, "echo") {
+
+			resp = []byte(fmt.Sprintf("+%s\r\n", split[4]))
+
+		} else if slices.Contains(split, "set") {
+			m[split[4]] = split[6]
+			resp = []byte("+OK\r\n")
+
+		} else if slices.Contains(split, "get") {
+			value := m[split[4]]
+			if value != "" {
+				resp = []byte(fmt.Sprintf("+%s\r\n", value))
+			} else {
+				resp = []byte(fmt.Sprintf("+%s\r\n", "key not found"))
 			}
-		} else if strings.Contains(req_cmd, "echo") {
-			// buffer is 1024 size, only take up to n as it's the size buffer is used
-			// rest is not filled
-			request := string(buffer[:n])
-			split := strings.Split(request, "\r\n")
 
-			// for debugging
-			fmt.Println("Received request:", request)
-			fmt.Println("Number of parts:", len(split))
+		}
 
-			//wrap string with redis protocol format and convert to byte array,
-			// and send through connection
-			_, err = conn.Write([]byte(fmt.Sprintf("+%s\r\n", split[4])))
-			if err != nil {
-				fmt.Println("Error sending response", err.Error())
-				os.Exit(1)
-			}
+		// wrap string with redis protocol format and convert to byte array,
+		// and send through connection
+		_, err = conn.Write(resp)
+		if err != nil {
+			fmt.Println("Error sending response", err.Error())
+			os.Exit(1)
 		}
 
 	}
