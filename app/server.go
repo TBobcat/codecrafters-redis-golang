@@ -106,8 +106,10 @@ func handler(conn net.Conn, m map[string]Pair) {
 
 				if !val_expired {
 					resp = []byte(fmt.Sprintf("+%s\r\n", p.value))
+
+					// reply null string if value is expired
 				} else {
-					resp = []byte("+value for gien key expired\r\n")
+					resp = []byte("$-1\r\n")
 				}
 
 			} else if exists {
