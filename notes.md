@@ -64,3 +64,6 @@ https://app.codecrafters.io/users/sarp
 
 ## July 28th
 in golang `make` allocates memory space to variables
+
+## July 30th
+used interface and struct to finish the expiry task
