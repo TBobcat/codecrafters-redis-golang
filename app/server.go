@@ -5,15 +5,22 @@ import (
 	"io"
 	"net"
 	"os"
+	"strconv"
 	"strings"
+	"time"
 	//"k8s.io/utils/strings/slices" non standard modules not supported for codecrafters' testing
 )
+
+// interface lets Pair p use fields with type checking like p.value.(int64)
+type Pair struct {
+	value, exp interface{}
+}
 
 func main() {
 	// You can use print statements as follows for debugging, they'll be visible when running tests.
 	fmt.Println("Logs from your program will appear here!")
 
-	mem := make(map[string]string)
+	mem := make(map[string]Pair)
 
 	l, err := net.Listen("tcp", "127.0.0.1:6379")
 	if err != nil {
@@ -34,7 +41,7 @@ func main() {
 	}
 }
 
-func handler(conn net.Conn, m map[string]string) {
+func handler(conn net.Conn, m map[string]Pair) {
 
 	// buffer is an array of bytes
 	buffer := make([]byte, 1024)
@@ -71,17 +78,43 @@ func handler(conn net.Conn, m map[string]string) {
 			resp = []byte(fmt.Sprintf("+%s\r\n", split[4]))
 
 		} else if strings.Contains(request, "set") {
-			m[split[4]] = split[6]
+			// sets value and expiration time if px is given, using Pair struct
+			if strings.Contains(request, "px") {
+				// convert string to int64
+				i, err := strconv.ParseInt(split[10], 10, 64)
+				if err != nil {
+					fmt.Println("error converting input milli seconds to int64")
+				}
+
+				// make pair as value to store in mem
+				exp_time := time.Now().UnixMilli() + i
+				p := Pair{split[6], exp_time}
+				m[split[4]] = p
+
+			} else {
+				m[split[4]] = Pair{split[6], nil}
+			}
+
 			resp = []byte("+OK\r\n")
 
 		} else if strings.Contains(request, "get") {
-			value := m[split[4]]
-			if value != "" {
-				resp = []byte(fmt.Sprintf("+%s\r\n", value))
-			} else {
-				resp = []byte(fmt.Sprintf("+%s\r\n", "key not found"))
-			}
+			p, exists := m[split[4]]
 
+			// only check time if p.exp is not nil
+			if exists && p.exp != nil {
+				val_expired := time.Now().UnixMilli()-p.exp.(int64) > 0
+
+				if !val_expired {
+					resp = []byte(fmt.Sprintf("+%s\r\n", p.value))
+				} else {
+					resp = []byte("+value for gien key expired\r\n")
+				}
+
+			} else if exists {
+				resp = []byte(fmt.Sprintf("+%s\r\n", p.value))
+			} else {
+				resp = []byte("-Error: Key not found\r\n")
+			}
 		}
 
 		// wrap string with redis protocol format and convert to byte array,
@@ -94,10 +127,3 @@ func handler(conn net.Conn, m map[string]string) {
 
 	}
 }
-
-/* decode
- */
-// func parse([]byte lst) {
-// 	decoded_slst = byte[]
-
-// }
